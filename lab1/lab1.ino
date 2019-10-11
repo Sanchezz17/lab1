@@ -1,66 +1,78 @@
 #include <Arduino.h>
-#include <MD_TCS230.h>
+#include "button.h"
+using namespace std;
 
-#define  S0_OUT  2
-#define  S1_OUT  3
-#define  S2_OUT  4
-#define  S3_OUT  5
+#define PIN_BUTTON 5
 
-#define R_OUT 6
-#define G_OUT 7
-#define B_OUT 8
+Button button(PIN_BUTTON);
 
-MD_TCS230 colorSensor(S2_OUT, S3_OUT, S0_OUT, S1_OUT);
+class Led 
+{
+public:
+    Led(int r_out, int g_out, int b_out)
+    {
+        R_OUT = r_out;
+        G_OUT = g_out;
+        B_OUT = b_out;
+    }
+    int GetR_OUT() { return R_OUT; }
+    int GetG_OUT() { return G_OUT; }
+    int GetB_OUT() { return B_OUT; }
+private:
+    int R_OUT;
+    int G_OUT;
+    int B_OUT;
+};
+
+Led leds[5] = { Led(6, 7, 8), Led(9, 10, 11), Led(12, 13, 14), Led(15, 16, 17), Led(18, 19, 20) };
+int currentLedNumber = 0;
+bool waveOn = false;
+
+void set_rgb_led(Led led, int R = 255, int G = 255, int B = 255)
+{
+    analogWrite(led.GetR_OUT(), 255 - R);
+    analogWrite(led.GetG_OUT(), 255 - G);
+    analogWrite(led.GetB_OUT(), 255 - B);
+}
 
 void setup()
 {
-    Serial.begin(115200);
-    Serial.println("Started!");
-
-    sensorData whiteCalibration;
-    whiteCalibration.value[TCS230_RGB_R] = 0;
-    whiteCalibration.value[TCS230_RGB_G] = 0;
-    whiteCalibration.value[TCS230_RGB_B] = 0;
-
-    sensorData blackCalibration;
-    blackCalibration.value[TCS230_RGB_R] = 0;
-    blackCalibration.value[TCS230_RGB_G] = 0;
-    blackCalibration.value[TCS230_RGB_B] = 0;
-
-    colorSensor.begin();
-    colorSensor.setDarkCal(&blackCalibration);
-    colorSensor.setWhiteCal(&whiteCalibration);
-
-    pinMode(R_OUT, OUTPUT);
-    pinMode(G_OUT, OUTPUT);
-    pinMode(B_OUT, OUTPUT);
+    for (Led led: leds)
+    {
+        pinMode(led.GetR_OUT(), OUTPUT);
+        pinMode(led.GetG_OUT(), OUTPUT);
+        pinMode(led.GetB_OUT(), OUTPUT);
+    }
 }
 
 void loop() 
 {
-    colorData rgb;
-    colorSensor.read();
-
-    while (!colorSensor.available());
-
-    colorSensor.getRGB(&rgb);
-    print_rgb(rgb);
-    set_rgb_led(rgb);
+    if (button.wasPressed())
+    {
+        waveOn = !waveOn;
+        if (!waveOn)
+        {
+            stopWave();
+        }
+    }
+    if (waveOn)
+    {
+        waveIteration();  
+    }
 }
 
-void print_rgb(colorData rgb)
+void waveIteration()
 {
-  Serial.print(rgb.value[TCS230_RGB_R]);
-  Serial.print(" ");
-  Serial.print(rgb.value[TCS230_RGB_G]);
-  Serial.print(" ");
-  Serial.print(rgb.value[TCS230_RGB_B]);
-  Serial.println();
+    set_rgb_led(leds[currentLedNumber], 0, 255, 0);
+    delay(500);
+    set_rgb_led(leds[currentLedNumber]);
+    currentLedNumber = (currentLedNumber + 1) % 5;
 }
 
-void set_rgb_led(colorData rgb)
+void stopWave()
 {
-    analogWrite(R_OUT, 255 - rgb.value[TCS230_RGB_R]);
-    analogWrite(G_OUT, 255 - rgb.value[TCS230_RGB_G]);
-    analogWrite(B_OUT, 255 - rgb.value[TCS230_RGB_B]);
+    for (Led led: leds)
+    {
+        set_rgb_led(leds[currentLedNumber]);
+    }
 }
