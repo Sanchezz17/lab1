@@ -87,7 +87,7 @@ void waveIteration()
         led.X += delta;
         if (led.X >= 0 && led.X <= 255)
             led.Y = led.X;
-        else if (led.X <= 510)
+        else if (led.X > 255 && led.X <= 510)
             led.Y = 510 - led.X;
         else
             led.X = 0;
