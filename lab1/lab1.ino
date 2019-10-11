@@ -9,12 +9,16 @@ Button button(PIN_BUTTON);
 class Led 
 {
 public:
-    Led(int r_out, int g_out, int b_out)
+    Led(int r_out, int g_out, int b_out, int initialXY)
     {
         R_OUT = r_out;
         G_OUT = g_out;
         B_OUT = b_out;
+        X = Y = initialXY;
     }
+    int X;
+    int Y;
+    
     int GetR_OUT() { return R_OUT; }
     int GetG_OUT() { return G_OUT; }
     int GetB_OUT() { return B_OUT; }
@@ -24,10 +28,17 @@ private:
     int B_OUT;
 };
 
-//Led leds[5] = { Led(6, 7, 8), Led(9, 10, 11), Led(12, 13, 14), Led(15, 16, 17), Led(18, 19, 20) };
-Led leds[5] = { Led(6, 7, 8), Led(9, 10, 11), Led(31, 33, 35), Led(37, 39, 41), Led(43, 45, 47) };
-int currentLedNumber = 0;
+int ledsCount = 5;
+int difference = 60;
+Led leds[5] = { 
+  Led(9, 10, 11, 255),
+  Led(6, 7, 8, 255 - difference),
+  Led(31, 33, 35, 255 - 2 * difference),
+  Led(37, 39, 41, 255 - 3 * difference),
+  Led(43, 45, 47, 255 - 4 * difference) 
+};
 bool waveOn = false;
+int delta = 5;
 
 void set_rgb_led(Led led, int R = 0, int G = 0, int B = 0)
 {
@@ -71,20 +82,22 @@ bool checkOff() {
 
 void waveIteration()
 {
-    Led currentLed = leds[currentLedNumber];
-    int nextLedNumber = (currentLedNumber + 1) % 5;
-    Led nextLed = leds[nextLedNumber];
-    for (int i = 255; i >= 0; i--)
+    for (Led led: leds)
     {
-        if (checkOff())
-            return;
-        delay(20);
-        set_rgb_led(currentLed, i, i, i);
-        delay(20);
-        set_rgb_led(nextLed, 255 - i, 255 - i, 255 - i);
+        led.X += delta;
+        if (led.X >= 0 && led.X <= 255)
+            led.Y = led.X;
+        else if (led.X <= 510)
+            led.Y = 510 - led.X;
+        else
+            led.X = 0;
+        set_rgb_led(led, led.Y, led.Y, led.Y);
     }
-
-    currentLedNumber = nextLedNumber;
+    if (delta > 0 && leds[ledsCount - 1].X >= 255
+      || delta < 0 && leds[0].X <= 255)
+    {
+        delta = -delta;
+    }
 }
 
 void offAllLeds()
