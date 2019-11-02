@@ -63,6 +63,7 @@ void loop()
     checkOff();
     if (waveOn)
     {
+        delay(20);
         waveIteration();  
     }
 }
