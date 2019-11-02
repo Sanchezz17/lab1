@@ -9,16 +9,12 @@ Button button(PIN_BUTTON);
 class Led 
 {
 public:
-    Led(int r_out, int g_out, int b_out, int initialXY)
+    Led(int r_out, int g_out, int b_out)
     {
         R_OUT = r_out;
         G_OUT = g_out;
         B_OUT = b_out;
-        X = initialXY;
-        Y = initialXY;
     }
-    int X;
-    int Y;
     
     int GetR_OUT() { return R_OUT; }
     int GetG_OUT() { return G_OUT; }
@@ -31,12 +27,14 @@ private:
 
 int ledsCount = 5;
 int difference = 80;
-Led leds[5] = { 
-  Led(9, 10, 11, 255),
-  Led(6, 7, 8, 255 - difference),
-  Led(31, 33, 35, 255 - 2 * difference),
-  Led(37, 39, 41, 255 - 3 * difference),
-  Led(36, 38, 40, 255 - 4 * difference) 
+int *X = new int[5] { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
+int *Y = new int[5] { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
+Led *leds = new Led[5] { 
+  Led(9, 10, 11),
+  Led(6, 7, 8),
+  Led(4, 3, 2),
+  Led(37, 39, 41),
+  Led(36, 38, 40) 
 };
 bool waveOn = false;
 int delta = 5;
@@ -50,62 +48,67 @@ void set_rgb_led(Led led, int R = 0, int G = 0, int B = 0)
 
 void setup()
 {
-    for (Led led: leds)
+    for (int i = 0; i < ledsCount; i++)
     {
+        Led led = leds[i];
         pinMode(led.GetR_OUT(), OUTPUT);
         pinMode(led.GetG_OUT(), OUTPUT);
         pinMode(led.GetB_OUT(), OUTPUT);
     }
-    offAllLeds();
+    turnOffAllLeds();
+    Serial.begin(115200);
 }
 
 void loop() 
 {
-    checkOff();
+    if (button.wasPressed())
+    {
+      toggle();
+    }
     if (waveOn)
     {
-        delay(20);
+        delay(40);
         waveIteration();  
     }
 }
 
-bool checkOff() {
-    if (button.wasPressed())
-    {
-        waveOn = !waveOn;
-        if (!waveOn)
-        {
-            offAllLeds();
-            return true;
-        }
-    }
-    return false;
+void toggle() {
+    waveOn = !waveOn;
+    if (!waveOn)
+        turnOffAllLeds();
 }
 
 void waveIteration()
 {
-    for (Led led: leds)
+    for (int i = 0; i < ledsCount; i++)
     {
-        led.X += delta;
-        if (led.X >= 0 && led.X <= 255)
-            led.Y = led.X;
-        else if (led.X > 255 && led.X <= 510)
-            led.Y = 510 - led.X;
+        Led led = leds[i];
+        Serial.println(X[i]);
+        X[i] += delta;
+        Serial.println(X[i]);
+        if (X[i] >= 0 && X[i] <= 255)
+            Y[i] = X[i];
+        else if (X[i] > 255 && X[i] <= 510)
+            Y[i] = 510 - X[i];
         else
-            led.Y = 0;
-        set_rgb_led(led, led.Y, led.Y, led.Y);
+            Y[i] = 0;
+        set_rgb_led(led, Y[i], Y[i], Y[i]);
+        /*Serial.print(led.X);
+        Serial.print(" ");
+        Serial.println(led.Y);*/
     }
-    if (delta > 0 && leds[ledsCount - 1].X >= 255
-      || delta < 0 && leds[0].X <= 255)
+    Serial.println();
+    if (delta > 0 && X[ledsCount - 1] >= 255
+      || delta < 0 && X[0] <= 255)
     {
         delta = -delta;
     }
 }
 
-void offAllLeds()
+void turnOffAllLeds()
 {
-    for (Led led: leds)
+    for (int i = 0; i < ledsCount; i++)
     {
-        set_rgb_led(led);
+        set_rgb_led(leds[i]);
     }
 }
