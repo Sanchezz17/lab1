@@ -14,7 +14,8 @@ public:
         R_OUT = r_out;
         G_OUT = g_out;
         B_OUT = b_out;
-        X = Y = initialXY;
+        X = initialXY;
+        Y = initialXY;
     }
     int X;
     int Y;
@@ -29,13 +30,13 @@ private:
 };
 
 int ledsCount = 5;
-int difference = 60;
+int difference = 80;
 Led leds[5] = { 
   Led(9, 10, 11, 255),
   Led(6, 7, 8, 255 - difference),
   Led(31, 33, 35, 255 - 2 * difference),
   Led(37, 39, 41, 255 - 3 * difference),
-  Led(43, 45, 47, 255 - 4 * difference) 
+  Led(36, 38, 40, 255 - 4 * difference) 
 };
 bool waveOn = false;
 int delta = 5;
@@ -91,7 +92,7 @@ void waveIteration()
         else if (led.X > 255 && led.X <= 510)
             led.Y = 510 - led.X;
         else
-            led.X = 0;
+            led.Y = 0;
         set_rgb_led(led, led.Y, led.Y, led.Y);
     }
     if (delta > 0 && leds[ledsCount - 1].X >= 255
