@@ -6,10 +6,10 @@
 Button button(PIN_BUTTON);
 
 int delta = 20;
-int difference = 120;
-int *bluePins = new int[5] { 12, 11, 10, 9, 8 };
-int *X = new int[5] { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
-int *Y = new int[5] { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
+const int difference = 120;
+int bluePins[5] = { 12, 11, 10, 9, 8 };
+int pinPosition[5] = { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
+int blueBrightness[5] = { 255, 255 - difference, 255 - 2 * difference, 255 - 3 * difference, 255 - 4 * difference };
 int ledsCount = 5;
 
 bool waveOn = false;
@@ -51,17 +51,17 @@ void waveIteration()
 {
     for (int i = 0; i < ledsCount; i++)
     {
-        X[i] += delta;
-        if (X[i] >= 0 && X[i] <= 255)
-            Y[i] = X[i];
-        else if (X[i] > 255 && X[i] <= 510)
-            Y[i] = 510 - X[i];
+        pinPosition[i] += delta;
+        if (pinPosition[i] >= 0 && pinPosition[i] <= 255)
+            blueBrightness[i] = pinPosition[i];
+        else if (pinPosition[i] > 255 && pinPosition[i] <= 510)
+            blueBrightness[i] = 510 - pinPosition[i];
         else
-            Y[i] = 0;
-        set_B(bluePins[i], Y[i]);
+            blueBrightness[i] = 0;
+        set_B(bluePins[i], blueBrightness[i]);
     }
-    if (delta > 0 && X[ledsCount - 1] >= 255
-      || delta < 0 && X[0] <= 255)
+    if (delta > 0 && pinPosition[ledsCount - 1] >= 255
+      || delta < 0 && pinPosition[0] <= 255)
     {
         delta = -delta;
     }
